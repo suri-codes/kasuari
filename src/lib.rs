@@ -250,6 +250,12 @@ static VARIABLE_ID: AtomicUsize = AtomicUsize::new(0);
 #[derive(Copy, Clone, Hash, PartialEq, Eq, PartialOrd, Ord, Debug)]
 pub struct Variable(usize);
 
+impl Default for Variable {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Variable {
     /// Produces a new unique variable for use in constraint solving.
     pub fn new() -> Variable {
@@ -269,8 +275,8 @@ impl Term {
     /// Construct a new Term from a variable and a coefficient.
     fn new(variable: Variable, coefficient: f64) -> Term {
         Term {
-            variable: variable,
-            coefficient: coefficient,
+            variable,
+            coefficient,
         }
     }
 }
@@ -303,10 +309,7 @@ impl Expression {
     /// General constructor. Each `Term` in `terms` is part of the sum forming the expression, as
     /// well as `constant`.
     pub fn new(terms: Vec<Term>, constant: f64) -> Expression {
-        Expression {
-            terms: terms,
-            constant: constant,
-        }
+        Expression { terms, constant }
     }
     /// Mutates this expression by multiplying it by minus one.
     pub fn negate(&mut self) {
@@ -359,9 +362,9 @@ pub mod strength {
     /// Create a constraint as a linear combination of STRONG, MEDIUM and WEAK strengths,
     /// corresponding to `a` `b` and `c` respectively. The result is further multiplied by `w`.
     pub fn create(a: f64, b: f64, c: f64, w: f64) -> f64 {
-        (a * w).max(0.0).min(1000.0) * 1_000_000.0
-            + (b * w).max(0.0).min(1000.0) * 1000.0
-            + (c * w).max(0.0).min(1000.0)
+        (a * w).clamp(0.0, 1000.0) * 1_000_000.0
+            + (b * w).clamp(0.0, 1000.0) * 1000.0
+            + (c * w).clamp(0.0, 1000.0)
     }
     pub const REQUIRED: f64 = 1_001_001_000.0;
     pub const STRONG: f64 = 1_000_000.0;
@@ -370,7 +373,7 @@ pub mod strength {
 
     /// Clips a strength value to the legal range
     pub fn clip(s: f64) -> f64 {
-        s.min(REQUIRED).max(0.0)
+        s.clamp(0.0, REQUIRED)
     }
 }
 
@@ -415,8 +418,8 @@ impl Constraint {
     pub fn new(e: Expression, op: RelationalOperator, strength: f64) -> Constraint {
         Constraint(Arc::new(ConstraintData {
             expression: e,
-            op: op,
-            strength: strength,
+            op,
+            strength,
         }))
     }
     /// The expression of the left hand side of the constraint equation.
@@ -443,7 +446,7 @@ impl Hash for Constraint {
 impl PartialEq for Constraint {
     fn eq(&self, other: &Constraint) -> bool {
         use std::ops::Deref;
-        self.0.deref() as *const _ == other.0.deref() as *const _
+        std::ptr::eq(self.0.deref(), other.0.deref())
     }
 }
 
@@ -514,7 +517,7 @@ impl Row {
     fn new(constant: f64) -> Row {
         Row {
             cells: HashMap::new(),
-            constant: constant,
+            constant,
         }
     }
     fn add(&mut self, v: f64) -> f64 {
@@ -552,7 +555,7 @@ impl Row {
 
     fn reverse_sign(&mut self) {
         self.constant = -self.constant;
-        for (_, v) in &mut self.cells {
+        for v in self.cells.values_mut() {
             *v = -*v;
         }
     }
@@ -564,7 +567,7 @@ impl Row {
                 Entry::Vacant(_) => unreachable!(),
             };
         self.constant *= coeff;
-        for (_, v) in &mut self.cells {
+        for v in self.cells.values_mut() {
             *v *= coeff;
         }
     }

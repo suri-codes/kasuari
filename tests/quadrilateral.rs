@@ -37,25 +37,25 @@ fn test_quadrilateral() {
         weight *= multiplier;
     }
 
-    for (start, end) in vec![(0, 1), (1, 2), (2, 3), (3, 0)] {
+    for (start, end) in [(0, 1), (1, 2), (2, 3), (3, 0)] {
         solver
             .add_constraints(&[
-                midpoints[start].x | EQ(REQUIRED) | (points[start].x + points[end].x) / 2.0,
-                midpoints[start].y | EQ(REQUIRED) | (points[start].y + points[end].y) / 2.0,
+                midpoints[start].x | EQ(REQUIRED) | ((points[start].x + points[end].x) / 2.0),
+                midpoints[start].y | EQ(REQUIRED) | ((points[start].y + points[end].y) / 2.0),
             ])
             .unwrap();
     }
 
     solver
         .add_constraints(&[
-            points[0].x + 20.0 | LE(STRONG) | points[2].x,
-            points[0].x + 20.0 | LE(STRONG) | points[3].x,
-            points[1].x + 20.0 | LE(STRONG) | points[2].x,
-            points[1].x + 20.0 | LE(STRONG) | points[3].x,
-            points[0].y + 20.0 | LE(STRONG) | points[1].y,
-            points[0].y + 20.0 | LE(STRONG) | points[2].y,
-            points[3].y + 20.0 | LE(STRONG) | points[1].y,
-            points[3].y + 20.0 | LE(STRONG) | points[2].y,
+            (points[0].x + 20.0) | LE(STRONG) | points[2].x,
+            (points[0].x + 20.0) | LE(STRONG) | points[3].x,
+            (points[1].x + 20.0) | LE(STRONG) | points[2].x,
+            (points[1].x + 20.0) | LE(STRONG) | points[3].x,
+            (points[0].y + 20.0) | LE(STRONG) | points[1].y,
+            (points[0].y + 20.0) | LE(STRONG) | points[2].y,
+            (points[3].y + 20.0) | LE(STRONG) | points[1].y,
+            (points[3].y + 20.0) | LE(STRONG) | points[2].y,
         ])
         .unwrap();
 

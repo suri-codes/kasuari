@@ -43,6 +43,12 @@ pub struct Solver {
     id_tick: usize,
 }
 
+impl Default for Solver {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Solver {
     /// Construct a new solver.
     pub fn new() -> Solver {
@@ -149,7 +155,7 @@ impl Solver {
 
         // If the marker is basic, simply drop the row. Otherwise,
         // pivot the marker into the basis and then drop the row.
-        if let None = self.rows.remove(&tag.marker) {
+        if self.rows.remove(&tag.marker).is_none() {
             let (leaving, mut row) = self.get_marker_leaving_row(tag.marker).ok_or(
                 RemoveConstraintError::InternalSolverError("Failed to find leaving row."),
             )?;
@@ -204,15 +210,15 @@ impl Solver {
             return Err(AddEditVariableError::BadRequiredStrength);
         }
         let cn = Constraint::new(
-            Expression::from_term(Term::new(v.clone(), 1.0)),
+            Expression::from_term(Term::new(v, 1.0)),
             RelationalOperator::Equal,
             strength,
         );
         self.add_constraint(cn.clone()).unwrap();
         self.edits.insert(
-            v.clone(),
+            v,
             EditInfo {
-                tag: self.cns[&cn].clone(),
+                tag: self.cns[&cn],
                 constraint: cn,
                 constant: 0.0,
             },
@@ -308,7 +314,7 @@ impl Solver {
         }
         self.dual_optimise()
             .map_err(|e| SuggestValueError::InternalSolverError(e.0))?;
-        return Ok(());
+        Ok(())
     }
 
     fn var_changed(&mut self, v: Variable) {
@@ -379,7 +385,7 @@ impl Solver {
             let s = Symbol(*id_tick, SymbolType::External);
             var_for_symbol.insert(s, v);
             *id_tick += 1;
-            (::std::f64::NAN, s, 0)
+            (f64::NAN, s, 0)
         });
         value.2 += 1;
         value.1
@@ -495,15 +501,15 @@ impl Solver {
                 return *s;
             }
         }
-        if tag.marker.type_() == SymbolType::Slack || tag.marker.type_() == SymbolType::Error {
-            if row.coefficient_for(tag.marker) < 0.0 {
-                return tag.marker;
-            }
+        if (tag.marker.type_() == SymbolType::Slack || tag.marker.type_() == SymbolType::Error)
+            && row.coefficient_for(tag.marker) < 0.0
+        {
+            return tag.marker;
         }
-        if tag.other.type_() == SymbolType::Slack || tag.other.type_() == SymbolType::Error {
-            if row.coefficient_for(tag.other) < 0.0 {
-                return tag.other;
-            }
+        if (tag.other.type_() == SymbolType::Slack || tag.other.type_() == SymbolType::Error)
+            && row.coefficient_for(tag.other) < 0.0
+        {
+            return tag.other;
         }
         Symbol::invalid()
     }
@@ -541,7 +547,7 @@ impl Solver {
         }
 
         // Remove the artificial row from the tableau
-        for (_, row) in &mut self.rows {
+        for row in self.rows.values_mut() {
             row.remove(art);
         }
         self.objective.borrow_mut().remove(art);
@@ -605,9 +611,7 @@ impl Solver {
     /// an iteration of the dual simplex method to make the solution both
     /// optimal and feasible.
     fn dual_optimise(&mut self) -> Result<(), InternalSolverError> {
-        while !self.infeasible_rows.is_empty() {
-            let leaving = self.infeasible_rows.pop().unwrap();
-
+        while let Some(leaving) = self.infeasible_rows.pop() {
             let row = if let Entry::Occupied(entry) = self.rows.entry(leaving) {
                 if entry.get().constant < 0.0 {
                     Some(entry.remove())

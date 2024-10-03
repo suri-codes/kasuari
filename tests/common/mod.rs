@@ -12,7 +12,7 @@ impl Values {
         *self.0.borrow().get(&var).unwrap_or(&0.0)
     }
     fn update_values(&self, changes: &[(Variable, f64)]) {
-        for &(ref var, ref value) in changes {
+        for (var, value) in changes {
             println!("{:?} changed to {:?}", var, value);
             self.0.borrow_mut().insert(*var, *value);
         }
