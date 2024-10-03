@@ -80,16 +80,19 @@
 //!
 //! ```ignore
 //! let mut solver = Solver::new();
-//! solver.add_constraints(&[window_width |GE(REQUIRED)| 0.0, // positive window width
-//!                          box1.left |EQ(REQUIRED)| 0.0, // left align
-//!                          box2.right |EQ(REQUIRED)| window_width, // right align
-//!                          box2.left |GE(REQUIRED)| box1.right, // no overlap
-//!                          // positive widths
-//!                          box1.left |LE(REQUIRED)| box1.right,
-//!                          box2.left |LE(REQUIRED)| box2.right,
-//!                          // preferred widths:
-//!                          box1.right - box1.left |EQ(WEAK)| 50.0,
-//!                          box2.right - box2.left |EQ(WEAK)| 100.0]).unwrap();
+//! solver.add_constraints(&[
+//!     window_width |GE(REQUIRED)| 0.0, // positive window width
+//!     box1.left |EQ(REQUIRED)| 0.0, // left align
+//!     box2.right |EQ(REQUIRED)| window_width, // right align
+//!     box2.left |GE(REQUIRED)| box1.right, // no overlap
+//!     // positive widths
+//!     box1.left |LE(REQUIRED)| box1.right,
+//!     box2.left |LE(REQUIRED)| box2.right,
+//!     // preferred widths:
+//!     box1.right - box1.left |EQ(WEAK)| 50.0,
+//!     box2.right - box2.left |EQ(WEAK)| 100.0
+//! ])?;
+//! # Ok::<(), kasuari::InternalSolverError>(())
 //! ```
 //!
 //! The window width is currently free to take any positive value. Let's constrain it to a
@@ -194,16 +197,17 @@
 //! # names.insert(box2.left, "box2.left");
 //! # names.insert(box2.right, "box2.right");
 //! # let mut solver = Solver::new();
-//! # solver.add_constraints(&[window_width |GE(REQUIRED)| 0.0, // positive window width
-//! #                          box1.left |EQ(REQUIRED)| 0.0, // left align
-//! #                          box2.right |EQ(REQUIRED)| window_width, // right align
-//! #                          box2.left |GE(REQUIRED)| box1.right, // no overlap
-//! #                          // positive widths
-//! #                          box1.left |LE(REQUIRED)| box1.right,
-//! #                          box2.left |LE(REQUIRED)| box2.right,
-//! #                          // preferred widths:
-//! #                          box1.right - box1.left |EQ(WEAK)| 50.0,
-//! #                          box2.right - box2.left |EQ(WEAK)| 100.0]).unwrap();
+//! # solver.add_constraints(&[
+//! #     window_width |GE(REQUIRED)| 0.0, // positive window width
+//! #     box1.left |EQ(REQUIRED)| 0.0, // left align
+//! #     box2.right |EQ(REQUIRED)| window_width, // right align
+//! #     box2.left |GE(REQUIRED)| box1.right, // no overlap
+//! #     // positive widths
+//! #     box1.left |LE(REQUIRED)| box1.right,
+//! #     box2.left |LE(REQUIRED)| box2.right,
+//! #     // preferred widths:
+//! #     box1.right - box1.left |EQ(WEAK)| 50.0,
+//! #     box2.right - box2.left |EQ(WEAK)| 100.0]).unwrap();
 //! # solver.add_edit_variable(window_width, STRONG).unwrap();
 //! # solver.suggest_value(window_width, 300.0).unwrap();
 //! # print_changes(&names, solver.fetch_changes());
@@ -232,15 +236,15 @@
 //! of this crate.
 use std::{
     collections::{hash_map::Entry, HashMap},
-    hash::{Hash, Hasher},
-    sync::{
-        atomic::{AtomicUsize, Ordering},
-        Arc,
-    },
+    sync::atomic::{AtomicUsize, Ordering},
 };
 
+mod constraint;
+mod error;
 mod operators;
 mod solver_impl;
+
+pub use self::{constraint::Constraint, error::*, solver_impl::Solver};
 
 static VARIABLE_ID: AtomicUsize = AtomicUsize::new(0);
 
@@ -399,59 +403,6 @@ impl std::fmt::Display for RelationalOperator {
     }
 }
 
-#[derive(Debug)]
-struct ConstraintData {
-    expression: Expression,
-    strength: f64,
-    op: RelationalOperator,
-}
-
-/// A constraint, consisting of an equation governed by an expression and a relational operator,
-/// and an associated strength.
-#[derive(Clone, Debug)]
-pub struct Constraint(Arc<ConstraintData>);
-
-impl Constraint {
-    /// Construct a new constraint from an expression, a relational operator and a strength.
-    /// This corresponds to the equation `e op 0.0`, e.g. `x + y >= 0.0`. For equations with a
-    /// non-zero right hand side, subtract it from the equation to give a zero right hand side.
-    pub fn new(e: Expression, op: RelationalOperator, strength: f64) -> Constraint {
-        Constraint(Arc::new(ConstraintData {
-            expression: e,
-            op,
-            strength,
-        }))
-    }
-    /// The expression of the left hand side of the constraint equation.
-    pub fn expr(&self) -> &Expression {
-        &self.0.expression
-    }
-    /// The relational operator governing the constraint.
-    pub fn op(&self) -> RelationalOperator {
-        self.0.op
-    }
-    /// The strength of the constraint that the solver will use.
-    pub fn strength(&self) -> f64 {
-        self.0.strength
-    }
-}
-
-impl Hash for Constraint {
-    fn hash<H: Hasher>(&self, hasher: &mut H) {
-        use std::ops::Deref;
-        hasher.write_usize(self.0.deref() as *const _ as usize);
-    }
-}
-
-impl PartialEq for Constraint {
-    fn eq(&self, other: &Constraint) -> bool {
-        use std::ops::Deref;
-        std::ptr::eq(self.0.deref(), other.0.deref())
-    }
-}
-
-impl Eq for Constraint {}
-
 /// This is part of the syntactic sugar used for specifying constraints. This enum should be used as
 /// part of a constraint expression. See the module documentation for more information.
 pub enum WeightedRelation {
@@ -589,61 +540,3 @@ impl Row {
         }
     }
 }
-
-/// The possible error conditions that `Solver::add_constraint` can fail with.
-#[derive(Debug, Copy, Clone)]
-pub enum AddConstraintError {
-    /// The constraint specified has already been added to the solver.
-    DuplicateConstraint,
-    /// The constraint is required, but it is unsatisfiable in conjunction with the existing
-    /// constraints.
-    UnsatisfiableConstraint,
-    /// The solver entered an invalid state. If this occurs please report the issue. This variant
-    /// specifies additional details as a string.
-    InternalSolverError(&'static str),
-}
-
-/// The possible error conditions that `Solver::remove_constraint` can fail with.
-#[derive(Debug, Copy, Clone)]
-pub enum RemoveConstraintError {
-    /// The constraint specified was not already in the solver, so cannot be removed.
-    UnknownConstraint,
-    /// The solver entered an invalid state. If this occurs please report the issue. This variant
-    /// specifies additional details as a string.
-    InternalSolverError(&'static str),
-}
-
-/// The possible error conditions that `Solver::add_edit_variable` can fail with.
-#[derive(Debug, Copy, Clone)]
-pub enum AddEditVariableError {
-    /// The specified variable is already marked as an edit variable in the solver.
-    DuplicateEditVariable,
-    /// The specified strength was `REQUIRED`. This is illegal for edit variable strengths.
-    BadRequiredStrength,
-}
-
-/// The possible error conditions that `Solver::remove_edit_variable` can fail with.
-#[derive(Debug, Copy, Clone)]
-pub enum RemoveEditVariableError {
-    /// The specified variable was not an edit variable in the solver, so cannot be removed.
-    UnknownEditVariable,
-    /// The solver entered an invalid state. If this occurs please report the issue. This variant
-    /// specifies additional details as a string.
-    InternalSolverError(&'static str),
-}
-
-/// The possible error conditions that `Solver::suggest_value` can fail with.
-#[derive(Debug, Copy, Clone)]
-pub enum SuggestValueError {
-    /// The specified variable was not an edit variable in the solver, so cannot have its value
-    /// suggested.
-    UnknownEditVariable,
-    /// The solver entered an invalid state. If this occurs please report the issue. This variant
-    /// specifies additional details as a string.
-    InternalSolverError(&'static str),
-}
-
-#[derive(Debug, Copy, Clone)]
-struct InternalSolverError(&'static str);
-
-pub use solver_impl::Solver;

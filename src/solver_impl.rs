@@ -6,12 +6,16 @@ use std::{
 };
 
 use crate::{
+    constraint::Constraint,
     near_zero,
     strength::{clip, REQUIRED},
-    AddConstraintError, AddEditVariableError, Constraint, Expression, InternalSolverError,
-    RelationalOperator, RemoveConstraintError, RemoveEditVariableError, Row, SuggestValueError,
-    Symbol, SymbolType, Term, Variable,
+    AddConstraintError, AddEditVariableError, Expression, RelationalOperator,
+    RemoveConstraintError, RemoveEditVariableError, Row, SuggestValueError, Symbol, SymbolType,
+    Term, Variable,
 };
+
+#[derive(Debug, Copy, Clone)]
+struct InternalSolverError(&'static str);
 
 #[derive(Copy, Clone)]
 struct Tag {

@@ -21,3 +21,6 @@ categories = [
     "gui",
     "rendering",
 ]
+
+[dependencies]
+thiserror = "1.0.64"

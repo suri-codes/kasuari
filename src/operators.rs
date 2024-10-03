@@ -1,6 +1,8 @@
 use std::ops;
 
-use crate::{Constraint, Expression, PartialConstraint, Term, Variable, WeightedRelation};
+use crate::{
+    constraint::Constraint, Expression, PartialConstraint, Term, Variable, WeightedRelation,
+};
 
 // Relation
 
