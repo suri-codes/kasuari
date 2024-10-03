@@ -1,18 +1,23 @@
 [package]
-name = "cassowary"
-version = "0.3.0"
-authors = ["Dylan Ede <dylanede@googlemail.com>"]
+name = "kasuari"
+version = "0.4.0"
+authors = ["Dylan Ede <dylanede@googlemail.com>", "Josh McKinney"]
+edition = "2021"
 description = """
-A Rust implementation of the Cassowary linear constraint solving algorithm.
-
-The Cassowary algorithm is designed for naturally laying out user interfaces using linear constraints,
-like 'this button must line up with this text box'.
+A rust layout solver for GUIs, based on the Cassowary algorithm.
+A fork of the unmaintained cassowary-rs crate with improvments and bug fixes.
+Kasuari is the indonesian name for the cassowary bird.
 """
-documentation = "https://dylanede.github.io/cassowary-rs"
-homepage = "https://github.com/dylanede/cassowary-rs"
-repository = "https://github.com/dylanede/cassowary-rs"
+documentation = "https://docs.rs/kasuari"
+homepage = "https://github.com/joshka/kasuari"
+repository = "https://github.com/joshka/kasuari"
 readme = "README.md"
 license = "MIT / Apache-2.0"
-keywords = ["constraint", "simplex", "user", "interface", "layout"]
-
-[dependencies]
+keywords = ["cassowary", "layout", "tui", "solver"]
+categories = [
+    "algorithms",
+    "command-line-interface",
+    "graphics",
+    "gui",
+    "rendering",
+]

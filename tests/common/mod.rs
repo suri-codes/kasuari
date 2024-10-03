@@ -1,8 +1,8 @@
-use std::collections::HashMap;
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::rc::Rc;
 
-use cassowary::Variable;
+use kasuari::Variable;
 
 #[derive(Clone, Default)]
 struct Values(Rc<RefCell<HashMap<Variable, f64>>>);
@@ -19,7 +19,10 @@ impl Values {
     }
 }
 
-pub fn new_values() -> (Box<Fn(Variable) -> f64>, Box<Fn(&[(Variable, f64)])>) {
+pub fn new_values() -> (
+    Box<dyn Fn(Variable) -> f64>,
+    Box<dyn Fn(&[(Variable, f64)])>,
+) {
     let values = Values(Rc::new(RefCell::new(HashMap::new())));
     let value_of = {
         let values = values.clone();
