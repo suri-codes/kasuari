@@ -236,6 +236,7 @@
 //! of this crate.
 use std::{
     collections::{hash_map::Entry, HashMap},
+    fmt,
     sync::atomic::{AtomicUsize, Ordering},
 };
 
@@ -245,8 +246,6 @@ mod operators;
 mod solver_impl;
 
 pub use self::{constraint::Constraint, error::*, solver_impl::Solver};
-
-static VARIABLE_ID: AtomicUsize = AtomicUsize::new(0);
 
 /// Identifies a variable for the constraint solver.
 /// Each new variable is unique in the view of the solver, but copying or cloning the variable
@@ -262,8 +261,9 @@ impl Default for Variable {
 
 impl Variable {
     /// Produces a new unique variable for use in constraint solving.
-    pub fn new() -> Variable {
-        Variable(VARIABLE_ID.fetch_add(1, Ordering::Relaxed))
+    pub fn new() -> Self {
+        static VARIABLE_ID: AtomicUsize = AtomicUsize::new(0);
+        Self(VARIABLE_ID.fetch_add(1, Ordering::Relaxed))
     }
 }
 
@@ -382,7 +382,7 @@ pub mod strength {
 }
 
 /// The possible relations that a constraint can specify.
-#[derive(Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Debug)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum RelationalOperator {
     /// `<=`
     LessOrEqual,
@@ -392,8 +392,8 @@ pub enum RelationalOperator {
     GreaterOrEqual,
 }
 
-impl std::fmt::Display for RelationalOperator {
-    fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {
+impl fmt::Display for RelationalOperator {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             RelationalOperator::LessOrEqual => write!(fmt, "<=")?,
             RelationalOperator::Equal => write!(fmt, "==")?,
@@ -428,7 +428,7 @@ impl From<WeightedRelation> for (RelationalOperator, f64) {
 /// not use it directly.
 pub struct PartialConstraint(Expression, WeightedRelation);
 
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 enum SymbolType {
     Invalid,
     External,
@@ -437,7 +437,7 @@ enum SymbolType {
     Dummy,
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 struct Symbol(usize, SymbolType);
 
 impl Symbol {
@@ -449,7 +449,7 @@ impl Symbol {
     }
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 struct Row {
     cells: HashMap<Symbol, f64>,
     constant: f64,
