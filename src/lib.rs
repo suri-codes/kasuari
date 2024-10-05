@@ -234,14 +234,14 @@
 //! not have any inherent knowledge of user interfaces, directions or boxes. Thus for use in a user
 //! interface this crate should ideally be wrapped by a higher level API, which is outside the scope
 //! of this crate.
-use std::collections::{hash_map::Entry, HashMap};
 
 mod constraint;
 mod error;
 mod expression;
 mod relations;
+mod row;
 mod solver;
-pub mod strength;
+mod strength;
 mod term;
 mod variable;
 
@@ -255,116 +255,3 @@ pub use self::{
     term::Term,
     variable::Variable,
 };
-
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-enum SymbolType {
-    Invalid,
-    External,
-    Slack,
-    Error,
-    Dummy,
-}
-
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-struct Symbol(usize, SymbolType);
-
-impl Symbol {
-    fn invalid() -> Symbol {
-        Symbol(0, SymbolType::Invalid)
-    }
-    fn type_(&self) -> SymbolType {
-        self.1
-    }
-}
-
-#[derive(Debug, Clone)]
-struct Row {
-    cells: HashMap<Symbol, f64>,
-    constant: f64,
-}
-
-fn near_zero(value: f64) -> bool {
-    const EPS: f64 = 1E-8;
-    if value < 0.0 {
-        -value < EPS
-    } else {
-        value < EPS
-    }
-}
-
-impl Row {
-    fn new(constant: f64) -> Row {
-        Row {
-            cells: HashMap::new(),
-            constant,
-        }
-    }
-    fn add(&mut self, v: f64) -> f64 {
-        self.constant += v;
-        self.constant
-    }
-    fn insert_symbol(&mut self, s: Symbol, coefficient: f64) {
-        match self.cells.entry(s) {
-            Entry::Vacant(entry) => {
-                if !near_zero(coefficient) {
-                    entry.insert(coefficient);
-                }
-            }
-            Entry::Occupied(mut entry) => {
-                *entry.get_mut() += coefficient;
-                if near_zero(*entry.get_mut()) {
-                    entry.remove();
-                }
-            }
-        }
-    }
-
-    fn insert_row(&mut self, other: &Row, coefficient: f64) -> bool {
-        let constant_diff = other.constant * coefficient;
-        self.constant += constant_diff;
-        for (s, v) in &other.cells {
-            self.insert_symbol(*s, v * coefficient);
-        }
-        constant_diff != 0.0
-    }
-
-    fn remove(&mut self, s: Symbol) {
-        self.cells.remove(&s);
-    }
-
-    fn reverse_sign(&mut self) {
-        self.constant = -self.constant;
-        for v in self.cells.values_mut() {
-            *v = -*v;
-        }
-    }
-
-    fn solve_for_symbol(&mut self, s: Symbol) {
-        let coeff = -1.0
-            / match self.cells.entry(s) {
-                Entry::Occupied(entry) => entry.remove(),
-                Entry::Vacant(_) => unreachable!(),
-            };
-        self.constant *= coeff;
-        for v in self.cells.values_mut() {
-            *v *= coeff;
-        }
-    }
-
-    fn solve_for_symbols(&mut self, lhs: Symbol, rhs: Symbol) {
-        self.insert_symbol(lhs, -1.0);
-        self.solve_for_symbol(rhs);
-    }
-
-    fn coefficient_for(&self, s: Symbol) -> f64 {
-        self.cells.get(&s).cloned().unwrap_or(0.0)
-    }
-
-    fn substitute(&mut self, s: Symbol, row: &Row) -> bool {
-        if let Some(coeff) = self.cells.remove(&s) {
-            self.insert_row(row, coeff)
-        } else {
-            false
-        }
-    }
-}
