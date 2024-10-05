@@ -14,8 +14,18 @@ use crate::{
     Term, Variable,
 };
 
-#[derive(Debug, Copy, Clone)]
-struct InternalSolverError(&'static str);
+#[derive(Debug, Copy, Clone, thiserror::Error)]
+#[error("The solver entered an invalid state. If this occurs please report the issue.")]
+pub enum InternalSolverError {
+    #[error("The objective is unbounded.")]
+    ObjectiveUnbounded,
+    #[error("Dual optimize failed.")]
+    DualOptimizeFailed,
+    #[error("Failed to find leaving row.")]
+    FailedToFindLeavingRow,
+    #[error("Edit constraint not in system")]
+    EditConstraintNotInSystem,
+}
 
 #[derive(Copy, Clone)]
 struct Tag {
@@ -117,7 +127,7 @@ impl Solver {
         if subject.type_() == SymbolType::Invalid {
             if !self
                 .add_with_artificial_variable(&row)
-                .map_err(|e| AddConstraintError::InternalSolverError(e.0))?
+                .map_err(|e| AddConstraintError::InternalSolverError(e))?
             {
                 return Err(AddConstraintError::UnsatisfiableConstraint);
             }
@@ -137,8 +147,7 @@ impl Solver {
         // aggregate work due to a smaller average system size. It
         // also ensures the solver remains in a consistent state.
         let objective = self.objective.clone();
-        self.optimise(&objective)
-            .map_err(|e| AddConstraintError::InternalSolverError(e.0))?;
+        self.optimize(&objective)?;
         Ok(())
     }
 
@@ -161,7 +170,9 @@ impl Solver {
         // pivot the marker into the basis and then drop the row.
         if self.rows.remove(&tag.marker).is_none() {
             let (leaving, mut row) = self.get_marker_leaving_row(tag.marker).ok_or(
-                RemoveConstraintError::InternalSolverError("Failed to find leaving row."),
+                RemoveConstraintError::InternalSolverError(
+                    InternalSolverError::FailedToFindLeavingRow,
+                ),
             )?;
             row.solve_for_symbols(leaving, tag.marker);
             self.substitute(tag.marker, &row);
@@ -171,8 +182,7 @@ impl Solver {
         // solver remains consistent. It makes the solver api easier to
         // use at a small tradeoff for speed.
         let objective = self.objective.clone();
-        self.optimise(&objective)
-            .map_err(|e| RemoveConstraintError::InternalSolverError(e.0))?;
+        self.optimize(&objective)?;
 
         // Check for and decrease the reference count for variables referenced by the constraint
         // If the reference count is zero remove the variable from the variable map
@@ -235,7 +245,9 @@ impl Solver {
         if let Some(constraint) = self.edits.remove(&v).map(|e| e.constraint) {
             self.remove_constraint(&constraint).map_err(|e| match e {
                 RemoveConstraintError::UnknownConstraint => {
-                    RemoveEditVariableError::InternalSolverError("Edit constraint not in system")
+                    RemoveEditVariableError::InternalSolverError(
+                        InternalSolverError::EditConstraintNotInSystem,
+                    )
                 }
                 RemoveConstraintError::InternalSolverError(s) => {
                     RemoveEditVariableError::InternalSolverError(s)
@@ -316,8 +328,7 @@ impl Solver {
                 }
             }
         }
-        self.dual_optimise()
-            .map_err(|e| SuggestValueError::InternalSolverError(e.0))?;
+        self.dual_optimize()?;
         Ok(())
     }
 
@@ -531,7 +542,7 @@ impl Solver {
         // Optimize the artificial objective. This is successful
         // only if the artificial objective is optimized to zero.
         let artificial = self.artificial.as_ref().unwrap().clone();
-        self.optimise(&artificial)?;
+        self.optimize(&artificial)?;
         let success = near_zero(artificial.borrow().constant);
         self.artificial = None;
 
@@ -588,7 +599,7 @@ impl Solver {
     ///
     /// This method performs iterations of Phase 2 of the simplex method
     /// until the objective function reaches a minimum.
-    fn optimise(&mut self, objective: &RefCell<Row>) -> Result<(), InternalSolverError> {
+    fn optimize(&mut self, objective: &RefCell<Row>) -> Result<(), InternalSolverError> {
         loop {
             let entering = Solver::get_entering_symbol(&objective.borrow());
             if entering.type_() == SymbolType::Invalid {
@@ -596,7 +607,7 @@ impl Solver {
             }
             let (leaving, mut row) = self
                 .get_leaving_row(entering)
-                .ok_or(InternalSolverError("The objective is unbounded"))?;
+                .ok_or(InternalSolverError::ObjectiveUnbounded)?;
             // pivot the entering symbol into the basis
             row.solve_for_symbols(leaving, entering);
             self.substitute(entering, &row);
@@ -614,7 +625,7 @@ impl Solver {
     /// function is optimal, but not feasible. This method will perform
     /// an iteration of the dual simplex method to make the solution both
     /// optimal and feasible.
-    fn dual_optimise(&mut self) -> Result<(), InternalSolverError> {
+    fn dual_optimize(&mut self) -> Result<(), InternalSolverError> {
         while let Some(leaving) = self.infeasible_rows.pop() {
             let row = if let Entry::Occupied(entry) = self.rows.entry(leaving) {
                 if entry.get().constant < 0.0 {
@@ -628,7 +639,7 @@ impl Solver {
             if let Some(mut row) = row {
                 let entering = self.get_dual_entering_symbol(&row);
                 if entering.type_() == SymbolType::Invalid {
-                    return Err(InternalSolverError("Dual optimise failed."));
+                    return Err(InternalSolverError::DualOptimizeFailed);
                 }
                 // pivot the entering symbol into the basis
                 row.solve_for_symbols(leaving, entering);

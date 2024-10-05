@@ -1,5 +1,7 @@
 use thiserror::Error;
 
+use crate::InternalSolverError;
+
 /// The possible error conditions that `Solver::add_constraint` can fail with.
 #[derive(Debug, Copy, Clone, Error)]
 pub enum AddConstraintError {
@@ -14,7 +16,7 @@ pub enum AddConstraintError {
 
     /// The solver entered an invalid state.
     #[error("The solver entered an invalid state. If this occurs please report the issue.")]
-    InternalSolverError(&'static str),
+    InternalSolverError(#[from] InternalSolverError),
 }
 
 /// The possible error conditions that `Solver::remove_constraint` can fail with.
@@ -27,7 +29,7 @@ pub enum RemoveConstraintError {
     /// The solver entered an invalid state. If this occurs please report the issue. This variant
     /// specifies additional details as a string.
     #[error("The solver entered an invalid state. If this occurs please report the issue.")]
-    InternalSolverError(&'static str),
+    InternalSolverError(#[from] InternalSolverError),
 }
 
 /// The possible error conditions that `Solver::add_edit_variable` can fail with.
@@ -54,7 +56,7 @@ pub enum RemoveEditVariableError {
     /// The solver entered an invalid state. If this occurs please report the issue. This variant
     /// specifies additional details as a string.
     #[error("The solver entered an invalid state. If this occurs please report the issue.")]
-    InternalSolverError(&'static str),
+    InternalSolverError(#[from] InternalSolverError),
 }
 
 /// The possible error conditions that `Solver::suggest_value` can fail with.
@@ -70,5 +72,5 @@ pub enum SuggestValueError {
     /// The solver entered an invalid state. If this occurs please report the issue. This variant
     /// specifies additional details as a string.
     #[error("The solver entered an invalid state. If this occurs please report the issue.")]
-    InternalSolverError(&'static str),
+    InternalSolverError(#[from] InternalSolverError),
 }

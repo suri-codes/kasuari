@@ -234,199 +234,26 @@
 //! not have any inherent knowledge of user interfaces, directions or boxes. Thus for use in a user
 //! interface this crate should ideally be wrapped by a higher level API, which is outside the scope
 //! of this crate.
-use std::{
-    collections::{hash_map::Entry, HashMap},
-    fmt,
-    sync::atomic::{AtomicUsize, Ordering},
-};
+use std::collections::{hash_map::Entry, HashMap};
 
 mod constraint;
 mod error;
-mod operators;
-mod solver_impl;
+mod expression;
+mod relations;
+mod solver;
+pub mod strength;
+mod term;
+mod variable;
 
-pub use self::{constraint::Constraint, error::*, solver_impl::Solver};
-
-/// Identifies a variable for the constraint solver.
-/// Each new variable is unique in the view of the solver, but copying or cloning the variable
-/// produces a copy of the same variable.
-#[derive(Copy, Clone, Hash, PartialEq, Eq, PartialOrd, Ord, Debug)]
-pub struct Variable(usize);
-
-impl Default for Variable {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl Variable {
-    /// Produces a new unique variable for use in constraint solving.
-    pub fn new() -> Self {
-        static VARIABLE_ID: AtomicUsize = AtomicUsize::new(0);
-        Self(VARIABLE_ID.fetch_add(1, Ordering::Relaxed))
-    }
-}
-
-/// A variable and a coefficient to multiply that variable by. This is a sub-expression in
-/// a constraint equation.
-#[derive(Copy, Clone, Debug)]
-pub struct Term {
-    pub variable: Variable,
-    pub coefficient: f64,
-}
-
-impl Term {
-    /// Construct a new Term from a variable and a coefficient.
-    fn new(variable: Variable, coefficient: f64) -> Term {
-        Term {
-            variable,
-            coefficient,
-        }
-    }
-}
-
-/// An expression that can be the left hand or right hand side of a constraint equation.
-/// It is a linear combination of variables, i.e. a sum of variables weighted by coefficients, plus
-/// an optional constant.
-#[derive(Clone, Debug)]
-pub struct Expression {
-    pub terms: Vec<Term>,
-    pub constant: f64,
-}
-
-impl Expression {
-    /// Constructs an expression of the form _n_, where n is a constant real number, not a variable.
-    pub fn from_constant(v: f64) -> Expression {
-        Expression {
-            terms: Vec::new(),
-            constant: v,
-        }
-    }
-    /// Constructs an expression from a single term. Forms an expression of the form _n x_
-    /// where n is the coefficient, and x is the variable.
-    pub fn from_term(term: Term) -> Expression {
-        Expression {
-            terms: vec![term],
-            constant: 0.0,
-        }
-    }
-    /// General constructor. Each `Term` in `terms` is part of the sum forming the expression, as
-    /// well as `constant`.
-    pub fn new(terms: Vec<Term>, constant: f64) -> Expression {
-        Expression { terms, constant }
-    }
-    /// Mutates this expression by multiplying it by minus one.
-    pub fn negate(&mut self) {
-        self.constant = -self.constant;
-        for t in &mut self.terms {
-            *t = -*t;
-        }
-    }
-}
-
-impl From<f64> for Expression {
-    fn from(v: f64) -> Expression {
-        Expression::from_constant(v)
-    }
-}
-
-impl From<Variable> for Expression {
-    fn from(v: Variable) -> Expression {
-        Expression::from_term(Term::new(v, 1.0))
-    }
-}
-
-impl From<Term> for Expression {
-    fn from(t: Term) -> Expression {
-        Expression::from_term(t)
-    }
-}
-
-/// Contains useful constants and functions for producing strengths for use in the constraint
-/// solver. Each constraint added to the solver has an associated strength specifying the precedence
-/// the solver should impose when choosing which constraints to enforce. It will try to enforce all
-/// constraints, but if that is impossible the lowest strength constraints are the first to be
-/// violated.
-///
-/// Strengths are simply real numbers. The strongest legal strength is 1,001,001,000.0. The weakest
-/// is 0.0. For convenience constants are declared for commonly used strengths. These are
-/// `REQUIRED`, `STRONG`, `MEDIUM` and `WEAK`. Feel free to multiply these by other values to get
-/// intermediate strengths. Note that the solver will clip given strengths to the legal range.
-///
-/// `REQUIRED` signifies a constraint that cannot be violated under any circumstance. Use this
-/// special strength sparingly, as the solver will fail completely if it find that not all of the
-/// `REQUIRED` constraints can be satisfied. The other strengths represent fallible constraints.
-/// These should be the most commonly used strenghts for use cases where violating a constraint is
-/// acceptable or even desired.
-///
-/// The solver will try to get as close to satisfying the constraints it violates as possible,
-/// strongest first. This behaviour can be used (for example) to provide a "default" value for a
-/// variable should no other stronger constraints be put upon it.
-pub mod strength {
-    /// Create a constraint as a linear combination of STRONG, MEDIUM and WEAK strengths,
-    /// corresponding to `a` `b` and `c` respectively. The result is further multiplied by `w`.
-    pub fn create(a: f64, b: f64, c: f64, w: f64) -> f64 {
-        (a * w).clamp(0.0, 1000.0) * 1_000_000.0
-            + (b * w).clamp(0.0, 1000.0) * 1000.0
-            + (c * w).clamp(0.0, 1000.0)
-    }
-    pub const REQUIRED: f64 = 1_001_001_000.0;
-    pub const STRONG: f64 = 1_000_000.0;
-    pub const MEDIUM: f64 = 1_000.0;
-    pub const WEAK: f64 = 1.0;
-
-    /// Clips a strength value to the legal range
-    pub fn clip(s: f64) -> f64 {
-        s.clamp(0.0, REQUIRED)
-    }
-}
-
-/// The possible relations that a constraint can specify.
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub enum RelationalOperator {
-    /// `<=`
-    LessOrEqual,
-    /// `==`
-    Equal,
-    /// `>=`
-    GreaterOrEqual,
-}
-
-impl fmt::Display for RelationalOperator {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            RelationalOperator::LessOrEqual => write!(fmt, "<=")?,
-            RelationalOperator::Equal => write!(fmt, "==")?,
-            RelationalOperator::GreaterOrEqual => write!(fmt, ">=")?,
-        };
-        Ok(())
-    }
-}
-
-/// This is part of the syntactic sugar used for specifying constraints. This enum should be used as
-/// part of a constraint expression. See the module documentation for more information.
-pub enum WeightedRelation {
-    /// `==`
-    EQ(f64),
-    /// `<=`
-    LE(f64),
-    /// `>=`
-    GE(f64),
-}
-impl From<WeightedRelation> for (RelationalOperator, f64) {
-    fn from(r: WeightedRelation) -> (RelationalOperator, f64) {
-        use WeightedRelation::*;
-        match r {
-            EQ(s) => (RelationalOperator::Equal, s),
-            LE(s) => (RelationalOperator::LessOrEqual, s),
-            GE(s) => (RelationalOperator::GreaterOrEqual, s),
-        }
-    }
-}
-
-/// This is an intermediate type used in the syntactic sugar for specifying constraints. You should
-/// not use it directly.
-pub struct PartialConstraint(Expression, WeightedRelation);
+pub use self::{
+    constraint::{Constraint, PartialConstraint},
+    error::*,
+    expression::Expression,
+    relations::{RelationalOperator, WeightedRelation},
+    solver::{InternalSolverError, Solver},
+    term::Term,
+    variable::Variable,
+};
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 enum SymbolType {
