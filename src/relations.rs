@@ -1,6 +1,6 @@
 use std::{fmt, ops};
 
-use crate::{Expression, PartialConstraint, Term, Variable};
+use crate::{Expression, PartialConstraint, Strength, Term, Variable};
 
 /// The possible relations that a constraint can specify.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -28,15 +28,15 @@ impl fmt::Display for RelationalOperator {
 /// part of a constraint expression. See the module documentation for more information.
 pub enum WeightedRelation {
     /// `==`
-    EQ(f64),
+    EQ(Strength),
     /// `<=`
-    LE(f64),
+    LE(Strength),
     /// `>=`
-    GE(f64),
+    GE(Strength),
 }
 
-impl From<WeightedRelation> for (RelationalOperator, f64) {
-    fn from(relation: WeightedRelation) -> (RelationalOperator, f64) {
+impl From<WeightedRelation> for (RelationalOperator, Strength) {
+    fn from(relation: WeightedRelation) -> (RelationalOperator, Strength) {
         match relation {
             WeightedRelation::EQ(s) => (RelationalOperator::Equal, s),
             WeightedRelation::LE(s) => (RelationalOperator::LessOrEqual, s),

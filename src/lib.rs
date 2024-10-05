@@ -251,6 +251,7 @@ pub use self::{
     expression::Expression,
     relations::{RelationalOperator, WeightedRelation},
     solver::{InternalSolverError, Solver},
+    strength::{Strength, MEDIUM, REQUIRED, STRONG, WEAK},
     term::Term,
     variable::Variable,
 };

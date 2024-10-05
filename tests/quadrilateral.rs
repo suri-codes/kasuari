@@ -6,7 +6,7 @@ use common::new_values;
 
 #[test]
 fn test_quadrilateral() {
-    use kasuari::strength::{REQUIRED, STRONG, WEAK};
+    use kasuari::{REQUIRED, STRONG, WEAK};
     struct Point {
         x: Variable,
         y: Variable,

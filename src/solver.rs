@@ -6,12 +6,9 @@ use std::{
 };
 
 use crate::{
-    constraint::Constraint,
-    near_zero,
-    strength::{clip, REQUIRED},
-    AddConstraintError, AddEditVariableError, Expression, RelationalOperator,
-    RemoveConstraintError, RemoveEditVariableError, Row, SuggestValueError, Symbol, SymbolType,
-    Term, Variable,
+    constraint::Constraint, near_zero, strength::Strength, AddConstraintError,
+    AddEditVariableError, Expression, RelationalOperator, RemoveConstraintError,
+    RemoveEditVariableError, Row, SuggestValueError, Symbol, SymbolType, Term, Variable, REQUIRED,
 };
 
 #[derive(Debug, Copy, Clone, thiserror::Error)]
@@ -214,12 +211,11 @@ impl Solver {
     pub fn add_edit_variable(
         &mut self,
         v: Variable,
-        strength: f64,
+        strength: Strength,
     ) -> Result<(), AddEditVariableError> {
         if self.edits.contains_key(&v) {
             return Err(AddEditVariableError::DuplicateEditVariable);
         }
-        let strength = clip(strength);
         if strength == REQUIRED {
             return Err(AddEditVariableError::BadRequiredStrength);
         }
@@ -453,7 +449,7 @@ impl Solver {
                     let error = Symbol(self.id_tick, SymbolType::Error);
                     self.id_tick += 1;
                     row.insert_symbol(error, -coeff);
-                    objective.insert_symbol(error, constraint.strength());
+                    objective.insert_symbol(error, constraint.strength().value());
                     Tag {
                         marker: slack,
                         other: error,
@@ -473,8 +469,8 @@ impl Solver {
                     self.id_tick += 1;
                     row.insert_symbol(errplus, -1.0); // v = eplus - eminus
                     row.insert_symbol(errminus, 1.0); // v - eplus + eminus = 0
-                    objective.insert_symbol(errplus, constraint.strength());
-                    objective.insert_symbol(errminus, constraint.strength());
+                    objective.insert_symbol(errplus, constraint.strength().value());
+                    objective.insert_symbol(errminus, constraint.strength().value());
                     Tag {
                         marker: errplus,
                         other: errminus,
@@ -787,11 +783,11 @@ impl Solver {
     }
 
     /// Remove the effects of a constraint on the objective function.
-    fn remove_constraint_effects(&mut self, cn: &Constraint, tag: &Tag) {
+    fn remove_constraint_effects(&mut self, constraint: &Constraint, tag: &Tag) {
         if tag.marker.type_() == SymbolType::Error {
-            self.remove_marker_effects(tag.marker, cn.strength());
+            self.remove_marker_effects(tag.marker, constraint.strength().value());
         } else if tag.other.type_() == SymbolType::Error {
-            self.remove_marker_effects(tag.other, cn.strength());
+            self.remove_marker_effects(tag.other, constraint.strength().value());
         }
     }
 

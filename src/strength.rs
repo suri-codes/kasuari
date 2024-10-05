@@ -19,19 +19,94 @@
 //! strongest first. This behaviour can be used (for example) to provide a "default" value for a
 //! variable should no other stronger constraints be put upon it.
 
-/// Create a constraint as a linear combination of STRONG, MEDIUM and WEAK strengths,
-/// corresponding to `a` `b` and `c` respectively. The result is further multiplied by `w`.
-pub fn create(a: f64, b: f64, c: f64, w: f64) -> f64 {
-    (a * w).clamp(0.0, 1000.0) * 1_000_000.0
-        + (b * w).clamp(0.0, 1000.0) * 1000.0
-        + (c * w).clamp(0.0, 1000.0)
-}
-pub const REQUIRED: f64 = 1_001_001_000.0;
-pub const STRONG: f64 = 1_000_000.0;
-pub const MEDIUM: f64 = 1_000.0;
-pub const WEAK: f64 = 1.0;
+#[derive(Debug, Copy, Clone, PartialEq, PartialOrd)]
+pub struct Strength(f64);
 
-/// Clips a strength value to the legal range
-pub fn clip(s: f64) -> f64 {
-    s.clamp(0.0, REQUIRED)
+pub const REQUIRED: Strength = Strength(1_001_001_000.0);
+pub const STRONG: Strength = Strength(1_000_000.0);
+pub const MEDIUM: Strength = Strength(1_000.0);
+pub const WEAK: Strength = Strength(1.0);
+
+impl Strength {
+    /// Create a new strength with the given value, clipped to the legal range (0.0, REQUIRED)
+    #[inline]
+    pub fn new(value: f64) -> Self {
+        Self(value.clamp(0.0, REQUIRED.value()))
+    }
+
+    /// Create a constraint as a linear combination of STRONG, MEDIUM and WEAK strengths,
+    /// corresponding to `a` `b` and `c` respectively. The result is further multiplied by `w`.
+    /// The result is clipped to the legal range.
+    #[inline]
+    pub fn create(strong: f64, medium: f64, weak: f64, multiplier: f64) -> Self {
+        Self(
+            (strong * multiplier).clamp(0.0, 1000.0) * 1_000_000.0
+                + (medium * multiplier).clamp(0.0, 1000.0) * 1000.0
+                + (weak * multiplier).clamp(0.0, 1000.0),
+        )
+    }
+
+    #[inline]
+    pub fn value(&self) -> f64 {
+        self.0
+    }
 }
+
+impl std::ops::Mul<f64> for Strength {
+    type Output = Strength;
+
+    #[inline]
+    fn mul(self, rhs: f64) -> Strength {
+        Strength::new(self.0 * rhs)
+    }
+}
+
+impl std::ops::Mul<Strength> for f64 {
+    type Output = Strength;
+
+    #[inline]
+    fn mul(self, rhs: Strength) -> Strength {
+        Strength::new(self * rhs.0)
+    }
+}
+
+impl std::ops::Add<Strength> for Strength {
+    type Output = Strength;
+
+    #[inline]
+    fn add(self, rhs: Strength) -> Strength {
+        Strength::new(self.0 + rhs.0)
+    }
+}
+
+impl std::ops::Sub<Strength> for Strength {
+    type Output = Strength;
+
+    #[inline]
+    fn sub(self, rhs: Strength) -> Strength {
+        Strength::new(self.0 - rhs.0)
+    }
+}
+
+impl std::ops::AddAssign<Strength> for Strength {
+    #[inline]
+    fn add_assign(&mut self, rhs: Strength) {
+        *self = *self + rhs;
+    }
+}
+
+impl std::ops::SubAssign<Strength> for Strength {
+    #[inline]
+    fn sub_assign(&mut self, rhs: Strength) {
+        *self = *self - rhs;
+    }
+}
+
+impl std::cmp::Ord for Strength {
+    #[inline]
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.partial_cmp(other).unwrap()
+    }
+}
+
+impl std::cmp::Eq for Strength {}
