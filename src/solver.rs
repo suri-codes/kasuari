@@ -81,12 +81,12 @@ impl Solver {
         }
     }
 
-    pub fn add_constraints<'a, I: IntoIterator<Item = &'a Constraint>>(
+    pub fn add_constraints<'a, I: IntoIterator<Item = Constraint>>(
         &mut self,
         constraints: I,
     ) -> Result<(), AddConstraintError> {
         for constraint in constraints {
-            self.add_constraint(constraint.clone())?;
+            self.add_constraint(constraint)?;
         }
         Ok(())
     }

@@ -29,7 +29,7 @@ fn test_quadrilateral() {
     let multiplier = 2.0;
     for i in 0..4 {
         solver
-            .add_constraints(&[
+            .add_constraints([
                 points[i].x | EQ(WEAK * weight) | point_starts[i].0,
                 points[i].y | EQ(WEAK * weight) | point_starts[i].1,
             ])
@@ -39,7 +39,7 @@ fn test_quadrilateral() {
 
     for (start, end) in [(0, 1), (1, 2), (2, 3), (3, 0)] {
         solver
-            .add_constraints(&[
+            .add_constraints([
                 midpoints[start].x | EQ(REQUIRED) | ((points[start].x + points[end].x) / 2.0),
                 midpoints[start].y | EQ(REQUIRED) | ((points[start].y + points[end].y) / 2.0),
             ])
@@ -47,7 +47,7 @@ fn test_quadrilateral() {
     }
 
     solver
-        .add_constraints(&[
+        .add_constraints([
             (points[0].x + 20.0) | LE(STRONG) | points[2].x,
             (points[0].x + 20.0) | LE(STRONG) | points[3].x,
             (points[1].x + 20.0) | LE(STRONG) | points[2].x,
@@ -61,7 +61,7 @@ fn test_quadrilateral() {
 
     for point in &points {
         solver
-            .add_constraints(&[
+            .add_constraints([
                 point.x | GE(REQUIRED) | 0.0,
                 point.y | GE(REQUIRED) | 0.0,
                 point.x | LE(REQUIRED) | 500.0,
