@@ -2,22 +2,22 @@
 
 [![crate-badge]][crate]
 [![docs-badge]][docs]
-[![github-badge]][github] \
-[![license-badge]][license]
+[![license-badge]][license] \
+[![github-badge]][github]
 [![build-badge]][build]
 [![codecov-badge]][codecov]
 
-[github-badge]: https://img.shields.io/badge/github-joshka%2Fkasuari-blue?logo=github&style=for-the-badge
-[crate-badge]: https://img.shields.io/crates/v/kasuari?logo=rust&style=for-the-badge
-[docs-badge]: https://img.shields.io/badge/docs.rs-kasuari-blue?logo=rust&style=for-the-badge
-[license-badge]: https://img.shields.io/crates/l/kasuari?style=for-the-badge
-[build-badge]: https:://github.com/joshka/kasuari/actions/workflows/rust.yml/badge.svg?logo=github&style=for-the-badge
-[codecov-badge]: https://img.shields.io/codecov/c/github/joshka/kasuari?logo=codecov&style=for-the-badge
+[crate-badge]: https://img.shields.io/crates/v/kasuari?logo=rust
+[docs-badge]: https://img.shields.io/badge/docs.rs-kasuari-blue?logo=rust
+[license-badge]: https://img.shields.io/crates/l/kasuari?logo=apache
+[github-badge]: https://img.shields.io/badge/github-joshka%2Fkasuari-blue?logo=github
+[build-badge]: https://github.com/joshka/kasuari/actions/workflows/rust.yml/badge.svg?logo=github
+[codecov-badge]: https://img.shields.io/codecov/c/github/joshka/kasuari?logo=codecov
 
 [github]: https://github.com/joshka/kasuari
 [crate]: https://crates.io/crates/kasuari
-[docs]: https://docs.rs/kasuari
 [license]: #license
+[docs]: https://docs.rs/kasuari
 [build]: https://github.com/joshka/kasuari/actions/workflows/rust.yml
 [codecov]: https://codecov.io/gh/joshka/kasuari
 
