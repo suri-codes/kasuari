@@ -28,6 +28,10 @@ Add this crate to your Cargo.toml file
 cargo add kasuari
 ```
 
+## Changes from Cassowary-rs
+
+See the [CHANGELOG](./CHANGELOG.md) for a full list of changes.
+
 ## License
 
 Licensed under either of
