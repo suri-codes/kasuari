@@ -1,5 +1,26 @@
 # Kasuari
 
+[![crate-badge]][crate]
+[![docs-badge]][docs]
+[![github-badge]][github] \
+[![license-badge]][license]
+[![build-badge]][build]
+[![codecov-badge]][codecov]
+
+[github-badge]: https://img.shields.io/badge/github-joshka%2Fkasuari-blue?logo=github&style=for-the-badge
+[crate-badge]: https://img.shields.io/crates/v/kasuari?logo=rust&style=for-the-badge
+[docs-badge]: https://img.shields.io/badge/docs.rs-kasuari-blue?logo=rust&style=for-the-badge
+[license-badge]: https://img.shields.io/crates/l/kasuari?style=for-the-badge
+[build-badge]: https:://github.com/joshka/kasuari/actions/workflows/rust.yml/badge.svg?logo=github&style=for-the-badge
+[codecov-badge]: https://img.shields.io/codecov/c/github/joshka/kasuari?logo=codecov&style=for-the-badge
+
+[github]: https://github.com/joshka/kasuari
+[crate]: https://crates.io/crates/kasuari
+[docs]: https://docs.rs/kasuari
+[license]: #license
+[build]: https://github.com/joshka/kasuari/actions/workflows/rust.yml
+[codecov]: https://codecov.io/gh/joshka/kasuari
+
 A Rust implementation of the Cassowary constraint solving algorithm ([Badros et. al 2001]). It is
 based heavily on the implementation the C++ [Kiwi] library. The implementation does however differ
 in some details.
