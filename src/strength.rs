@@ -6,12 +6,13 @@
 //!
 //! Strengths are simply real numbers. The strongest legal strength is 1,001,001,000.0. The weakest
 //! is 0.0. For convenience constants are declared for commonly used strengths. These are
-//! `REQUIRED`, `STRONG`, `MEDIUM` and `WEAK`. Feel free to multiply these by other values to get
-//! intermediate strengths. Note that the solver will clip given strengths to the legal range.
+//! [`REQUIRED`], [`STRONG`], [`MEDIUM`] and [`WEAK`]. Feel free to multiply these by other values
+//! to get intermediate strengths. Note that the solver will clip given strengths to the legal
+//! range.
 //!
-//! `REQUIRED` signifies a constraint that cannot be violated under any circumstance. Use this
+//! [`REQUIRED`] signifies a constraint that cannot be violated under any circumstance. Use this
 //! special strength sparingly, as the solver will fail completely if it find that not all of the
-//! `REQUIRED` constraints can be satisfied. The other strengths represent fallible constraints.
+//! [`REQUIRED`] constraints can be satisfied. The other strengths represent fallible constraints.
 //! These should be the most commonly used strenghts for use cases where violating a constraint is
 //! acceptable or even desired.
 //!
@@ -22,9 +23,16 @@
 #[derive(Debug, Copy, Clone, PartialEq, PartialOrd)]
 pub struct Strength(f64);
 
+/// The required strength for a constraint. This is the strongest possible strength.
 pub const REQUIRED: Strength = Strength(1_001_001_000.0);
+
+/// A strong strength for a constraint. This is weaker than `REQUIRED` but stronger than `MEDIUM`.
 pub const STRONG: Strength = Strength(1_000_000.0);
+
+/// A medium strength for a constraint. This is weaker than `STRONG` but stronger than `WEAK`.
 pub const MEDIUM: Strength = Strength(1_000.0);
+
+/// A weak strength for a constraint. This is weaker than `MEDIUM` but stronger than `0.0`.
 pub const WEAK: Strength = Strength(1.0);
 
 impl Strength {
