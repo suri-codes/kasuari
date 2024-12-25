@@ -247,7 +247,10 @@ mod variable;
 
 pub use self::{
     constraint::{Constraint, PartialConstraint},
-    error::*,
+    error::{
+        AddConstraintError, AddEditVariableError, RemoveConstraintError, RemoveEditVariableError,
+        SuggestValueError,
+    },
     expression::Expression,
     relations::{RelationalOperator, WeightedRelation},
     solver::{InternalSolverError, Solver},
