@@ -10,7 +10,7 @@ use crate::{
     row::{near_zero, Row, Symbol, SymbolKind},
     strength::Strength,
     AddConstraintError, AddEditVariableError, Expression, RelationalOperator,
-    RemoveConstraintError, RemoveEditVariableError, SuggestValueError, Term, Variable, REQUIRED,
+    RemoveConstraintError, RemoveEditVariableError, SuggestValueError, Term, Variable,
 };
 
 #[derive(Debug, Copy, Clone, thiserror::Error)]
@@ -212,7 +212,7 @@ impl Solver {
         if self.edits.contains_key(&v) {
             return Err(AddEditVariableError::DuplicateEditVariable);
         }
-        if strength == REQUIRED {
+        if strength == Strength::REQUIRED {
             return Err(AddEditVariableError::BadRequiredStrength);
         }
         let cn = Constraint::new(
@@ -439,7 +439,7 @@ impl Solver {
                 let slack = Symbol::new(self.id_tick, SymbolKind::Slack);
                 self.id_tick += 1;
                 row.insert_symbol(slack, coeff);
-                if constraint.strength() < REQUIRED {
+                if constraint.strength() < Strength::REQUIRED {
                     let error = Symbol::new(self.id_tick, SymbolKind::Error);
                     self.id_tick += 1;
                     row.insert_symbol(error, -coeff);
@@ -456,7 +456,7 @@ impl Solver {
                 }
             }
             RelationalOperator::Equal => {
-                if constraint.strength() < REQUIRED {
+                if constraint.strength() < Strength::REQUIRED {
                     let errplus = Symbol::new(self.id_tick, SymbolKind::Error);
                     self.id_tick += 1;
                     let errminus = Symbol::new(self.id_tick, SymbolKind::Error);

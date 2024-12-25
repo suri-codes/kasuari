@@ -1,12 +1,11 @@
-use kasuari::WeightedRelation::*;
 use kasuari::{Solver, Variable};
+use kasuari::{Strength, WeightedRelation::*};
 
 mod common;
 use common::new_values;
 
 #[test]
 fn test_quadrilateral() {
-    use kasuari::{REQUIRED, STRONG, WEAK};
     struct Point {
         x: Variable,
         y: Variable,
@@ -30,8 +29,8 @@ fn test_quadrilateral() {
     for i in 0..4 {
         solver
             .add_constraints([
-                points[i].x | EQ(WEAK * weight) | point_starts[i].0,
-                points[i].y | EQ(WEAK * weight) | point_starts[i].1,
+                points[i].x | EQ(Strength::WEAK * weight) | point_starts[i].0,
+                points[i].y | EQ(Strength::WEAK * weight) | point_starts[i].1,
             ])
             .unwrap();
         weight *= multiplier;
@@ -40,32 +39,36 @@ fn test_quadrilateral() {
     for (start, end) in [(0, 1), (1, 2), (2, 3), (3, 0)] {
         solver
             .add_constraints([
-                midpoints[start].x | EQ(REQUIRED) | ((points[start].x + points[end].x) / 2.0),
-                midpoints[start].y | EQ(REQUIRED) | ((points[start].y + points[end].y) / 2.0),
+                midpoints[start].x
+                    | EQ(Strength::REQUIRED)
+                    | ((points[start].x + points[end].x) / 2.0),
+                midpoints[start].y
+                    | EQ(Strength::REQUIRED)
+                    | ((points[start].y + points[end].y) / 2.0),
             ])
             .unwrap();
     }
 
     solver
         .add_constraints([
-            (points[0].x + 20.0) | LE(STRONG) | points[2].x,
-            (points[0].x + 20.0) | LE(STRONG) | points[3].x,
-            (points[1].x + 20.0) | LE(STRONG) | points[2].x,
-            (points[1].x + 20.0) | LE(STRONG) | points[3].x,
-            (points[0].y + 20.0) | LE(STRONG) | points[1].y,
-            (points[0].y + 20.0) | LE(STRONG) | points[2].y,
-            (points[3].y + 20.0) | LE(STRONG) | points[1].y,
-            (points[3].y + 20.0) | LE(STRONG) | points[2].y,
+            (points[0].x + 20.0) | LE(Strength::STRONG) | points[2].x,
+            (points[0].x + 20.0) | LE(Strength::STRONG) | points[3].x,
+            (points[1].x + 20.0) | LE(Strength::STRONG) | points[2].x,
+            (points[1].x + 20.0) | LE(Strength::STRONG) | points[3].x,
+            (points[0].y + 20.0) | LE(Strength::STRONG) | points[1].y,
+            (points[0].y + 20.0) | LE(Strength::STRONG) | points[2].y,
+            (points[3].y + 20.0) | LE(Strength::STRONG) | points[1].y,
+            (points[3].y + 20.0) | LE(Strength::STRONG) | points[2].y,
         ])
         .unwrap();
 
     for point in &points {
         solver
             .add_constraints([
-                point.x | GE(REQUIRED) | 0.0,
-                point.y | GE(REQUIRED) | 0.0,
-                point.x | LE(REQUIRED) | 500.0,
-                point.y | LE(REQUIRED) | 500.0,
+                point.x | GE(Strength::REQUIRED) | 0.0,
+                point.y | GE(Strength::REQUIRED) | 0.0,
+                point.x | LE(Strength::REQUIRED) | 500.0,
+                point.y | LE(Strength::REQUIRED) | 500.0,
             ])
             .unwrap()
     }
@@ -82,8 +85,12 @@ fn test_quadrilateral() {
         [(10.0, 105.0), (105.0, 200.0), (200.0, 105.0), (105.0, 10.0)]
     );
 
-    solver.add_edit_variable(points[2].x, STRONG).unwrap();
-    solver.add_edit_variable(points[2].y, STRONG).unwrap();
+    solver
+        .add_edit_variable(points[2].x, Strength::STRONG)
+        .unwrap();
+    solver
+        .add_edit_variable(points[2].y, Strength::STRONG)
+        .unwrap();
     solver.suggest_value(points[2].x, 300.0).unwrap();
     solver.suggest_value(points[2].y, 400.0).unwrap();
 
