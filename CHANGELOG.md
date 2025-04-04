@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.4.0-alpha.3](https://github.com/joshka/kasuari/compare/v0.4.0-alpha.2...v0.4.0-alpha.3) - 2025-04-04
+## [0.4.0](https://github.com/joshka/kasuari/compare/v0.4.0-alpha.2...v0.4.0) - 2025-04-04
 
 ### Added
 
