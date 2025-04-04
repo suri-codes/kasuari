@@ -20,6 +20,8 @@
 //! strongest first. This behaviour can be used (for example) to provide a "default" value for a
 //! variable should no other stronger constraints be put upon it.
 
+use core::ops;
+
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Strength(f64);
 
@@ -63,65 +65,101 @@ impl Strength {
     pub const fn value(&self) -> f64 {
         self.0
     }
-}
 
-impl core::ops::Add<Strength> for Strength {
-    type Output = Strength;
-
-    /// Add two strengths together, clipping the result to the legal range
+    /// Add two strengths together, clamping the result to the legal range
     #[inline]
-    fn add(self, rhs: Strength) -> Strength {
-        Strength::new(self.0 + rhs.0)
+    pub const fn add(self, rhs: Self) -> Self {
+        Self::new(self.0 + rhs.0)
+    }
+
+    /// Subtract one strength from another, clipping the result to the legal range
+    #[inline]
+    pub const fn sub(self, rhs: Self) -> Self {
+        Self::new(self.0 - rhs.0)
+    }
+
+    /// Multiply a strength by a scalar, clipping the result to the legal range
+    #[inline]
+    pub const fn mul_f64(self, rhs: f64) -> Self {
+        Self::new(self.0 * rhs)
+    }
+
+    /// Multiply a strength by a scalar, clipping the result to the legal range
+    #[inline]
+    pub const fn mul_f32(self, rhs: f32) -> Self {
+        Self::new(self.0 * rhs as f64)
+    }
+
+    /// Divide a strength by a scalar, clipping the result to the legal range
+    #[inline]
+    pub const fn div_f64(self, rhs: f64) -> Self {
+        Self::new(self.0 / rhs)
+    }
+
+    /// Divide a strength by a scalar, clipping the result to the legal range
+    #[inline]
+    pub const fn div_f32(self, rhs: f32) -> Self {
+        Self::new(self.0 / rhs as f64)
     }
 }
 
-impl core::ops::Sub<Strength> for Strength {
+impl ops::Add<Strength> for Strength {
+    type Output = Self;
+
+    /// Add two strengths together, clipping the result to the legal range
+    #[inline]
+    fn add(self, rhs: Self) -> Self {
+        Self::add(self, rhs)
+    }
+}
+
+impl ops::Sub<Strength> for Strength {
     type Output = Strength;
 
     /// Subtract one strength from another, clipping the result to the legal range
     #[inline]
     fn sub(self, rhs: Strength) -> Strength {
-        Strength::new(self.0 - rhs.0)
+        Self::sub(self, rhs)
     }
 }
 
-impl core::ops::AddAssign<Strength> for Strength {
+impl ops::AddAssign<Strength> for Strength {
     /// Perform an in-place addition of two strengths, clipping the result to the legal range
     #[inline]
-    fn add_assign(&mut self, rhs: Strength) {
+    fn add_assign(&mut self, rhs: Self) {
         *self = *self + rhs;
     }
 }
 
-impl core::ops::SubAssign<Strength> for Strength {
+impl ops::SubAssign<Strength> for Strength {
     /// Perform an in-place subtraction of two strengths, clipping the result to the legal range
     #[inline]
-    fn sub_assign(&mut self, rhs: Strength) {
+    fn sub_assign(&mut self, rhs: Self) {
         *self = *self - rhs;
     }
 }
 
-impl core::ops::Mul<f64> for Strength {
+impl ops::Mul<f64> for Strength {
     type Output = Strength;
 
     /// Multiply a strength by a scalar, clipping the result to the legal range
     #[inline]
     fn mul(self, rhs: f64) -> Strength {
-        Strength::new(self.0 * rhs)
+        self.mul_f64(rhs)
     }
 }
 
-impl core::ops::Mul<Strength> for f64 {
+impl ops::Mul<Strength> for f64 {
     type Output = Strength;
 
     /// Multiply a scalar by a strength, clipping the result to the legal range
     #[inline]
     fn mul(self, rhs: Strength) -> Strength {
-        Strength::new(self * rhs.0)
+        rhs.mul_f64(self)
     }
 }
 
-impl core::ops::MulAssign<f64> for Strength {
+impl ops::MulAssign<f64> for Strength {
     /// Perform an in-place multiplication of a strength by a scalar, clipping the result to the
     /// legal range
     #[inline]
