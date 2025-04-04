@@ -31,9 +31,8 @@
 //! First we need to include the relevant parts of `cassowary`:
 //!
 //! ```
-//! use kasuari::{ Solver, Variable };
 //! use kasuari::WeightedRelation::*;
-//! use kasuari::strength::{ WEAK, MEDIUM, STRONG, REQUIRED };
+//! use kasuari::{Solver, Variable};
 //! ```
 //!
 //! And we'll construct some conveniences for pretty printing (which should hopefully be
@@ -165,9 +164,8 @@
 //! example we are going to constrain the boxes to try to maintain a ratio between their widths.
 //!
 //! ```
-//! # use kasuari::{ Solver, Variable };
+//! # use kasuari::{ Solver, Variable, Strength };
 //! # use kasuari::WeightedRelation::*;
-//! # use kasuari::strength::{ WEAK, MEDIUM, STRONG, REQUIRED };
 //! #
 //! # use std::collections::HashMap;
 //! # let mut names = HashMap::new();
@@ -197,24 +195,24 @@
 //! # names.insert(box2.left, "box2.left");
 //! # names.insert(box2.right, "box2.right");
 //! # let mut solver = Solver::new();
-//! # solver.add_constraints(&[
-//! #     window_width |GE(REQUIRED)| 0.0, // positive window width
-//! #     box1.left |EQ(REQUIRED)| 0.0, // left align
-//! #     box2.right |EQ(REQUIRED)| window_width, // right align
-//! #     box2.left |GE(REQUIRED)| box1.right, // no overlap
+//! # solver.add_constraints([
+//! #     window_width |GE(Strength::REQUIRED)| 0.0, // positive window width
+//! #     box1.left |EQ(Strength::REQUIRED)| 0.0, // left align
+//! #     box2.right |EQ(Strength::REQUIRED)| window_width, // right align
+//! #     box2.left |GE(Strength::REQUIRED)| box1.right, // no overlap
 //! #     // positive widths
-//! #     box1.left |LE(REQUIRED)| box1.right,
-//! #     box2.left |LE(REQUIRED)| box2.right,
+//! #     box1.left |LE(Strength::REQUIRED)| box1.right,
+//! #     box2.left |LE(Strength::REQUIRED)| box2.right,
 //! #     // preferred widths:
-//! #     box1.right - box1.left |EQ(WEAK)| 50.0,
-//! #     box2.right - box2.left |EQ(WEAK)| 100.0]).unwrap();
-//! # solver.add_edit_variable(window_width, STRONG).unwrap();
+//! #     box1.right - box1.left |EQ(Strength::WEAK)| 50.0,
+//! #     box2.right - box2.left |EQ(Strength::WEAK)| 100.0]).unwrap();
+//! # solver.add_edit_variable(window_width, Strength::STRONG).unwrap();
 //! # solver.suggest_value(window_width, 300.0).unwrap();
 //! # print_changes(&names, solver.fetch_changes());
 //! # solver.suggest_value(window_width, 75.0);
 //! # print_changes(&names, solver.fetch_changes());
 //! solver.add_constraint(
-//!     (box1.right - box1.left) / 50.0 |EQ(MEDIUM)| (box2.right - box2.left) / 100.0
+//!     (box1.right - box1.left) / 50.0 |EQ(Strength::MEDIUM)| (box2.right - box2.left) / 100.0
 //!     ).unwrap();
 //! print_changes(&names, solver.fetch_changes());
 //! ```

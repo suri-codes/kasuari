@@ -1,4 +1,4 @@
 # the following configuration items require rust nightly
 comment_width = 100
 wrap_comments = true
-format_code_in_doc_comments = false
+format_code_in_doc_comments = true

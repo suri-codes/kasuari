@@ -27,7 +27,8 @@ impl Strength {
     /// The required strength for a constraint. This is the strongest possible strength.
     pub const REQUIRED: Strength = Strength(1_001_001_000.0);
 
-    /// A strong strength for a constraint. This is weaker than `REQUIRED` but stronger than `MEDIUM`.
+    /// A strong strength for a constraint. This is weaker than `REQUIRED` but stronger than
+    /// `MEDIUM`.
     pub const STRONG: Strength = Strength(1_000_000.0);
 
     /// A medium strength for a constraint. This is weaker than `STRONG` but stronger than `WEAK`.
@@ -121,7 +122,8 @@ impl std::ops::Mul<Strength> for f64 {
 }
 
 impl std::ops::MulAssign<f64> for Strength {
-    /// Perform an in-place multiplication of a strength by a scalar, clipping the result to the legal range
+    /// Perform an in-place multiplication of a strength by a scalar, clipping the result to the
+    /// legal range
     #[inline]
     fn mul_assign(&mut self, rhs: f64) {
         *self = *self * rhs;
