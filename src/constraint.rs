@@ -88,33 +88,41 @@ impl ops::BitOr<f64> for PartialConstraint {
     type Output = Constraint;
     fn bitor(self, rhs: f64) -> Constraint {
         let (operator, strength) = self.relation.into();
+        #[allow(clippy::suspicious_arithmetic_impl)]
         Constraint::new(self.expression - rhs, operator, strength)
     }
 }
+
 impl ops::BitOr<f32> for PartialConstraint {
     type Output = Constraint;
     fn bitor(self, rhs: f32) -> Constraint {
         self.bitor(rhs as f64)
     }
 }
+
 impl ops::BitOr<Variable> for PartialConstraint {
     type Output = Constraint;
     fn bitor(self, rhs: Variable) -> Constraint {
         let (operator, strength) = self.relation.into();
+        #[allow(clippy::suspicious_arithmetic_impl)]
         Constraint::new(self.expression - rhs, operator, strength)
     }
 }
+
 impl ops::BitOr<Term> for PartialConstraint {
     type Output = Constraint;
     fn bitor(self, rhs: Term) -> Constraint {
         let (operator, strength) = self.relation.into();
+        #[allow(clippy::suspicious_arithmetic_impl)]
         Constraint::new(self.expression - rhs, operator, strength)
     }
 }
+
 impl ops::BitOr<Expression> for PartialConstraint {
     type Output = Constraint;
     fn bitor(self, rhs: Expression) -> Constraint {
         let (operator, strength) = self.relation.into();
+        #[allow(clippy::suspicious_arithmetic_impl)]
         Constraint::new(self.expression - rhs, operator, strength)
     }
 }

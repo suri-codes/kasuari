@@ -19,6 +19,7 @@ impl Values {
     }
 }
 
+#[allow(clippy::type_complexity)]
 pub fn new_values() -> (
     Box<dyn Fn(Variable) -> f64>,
     Box<dyn Fn(&[(Variable, f64)])>,

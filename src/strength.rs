@@ -20,7 +20,7 @@
 //! strongest first. This behaviour can be used (for example) to provide a "default" value for a
 //! variable should no other stronger constraints be put upon it.
 
-#[derive(Debug, Copy, Clone, PartialEq, PartialOrd)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Strength(f64);
 
 impl Strength {
@@ -134,6 +134,13 @@ impl std::cmp::Ord for Strength {
     #[inline]
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.partial_cmp(other).unwrap()
+    }
+}
+
+impl std::cmp::PartialOrd for Strength {
+    #[inline]
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
     }
 }
 

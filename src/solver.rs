@@ -81,7 +81,7 @@ impl Solver {
         }
     }
 
-    pub fn add_constraints<'a, I: IntoIterator<Item = Constraint>>(
+    pub fn add_constraints<I: IntoIterator<Item = Constraint>>(
         &mut self,
         constraints: I,
     ) -> Result<(), AddConstraintError> {
@@ -289,16 +289,15 @@ impl Solver {
                     }
                 })
                 .is_some()
-            {
-            } else if self
-                .rows
-                .get_mut(&info_tag_other)
-                .map(|row| {
-                    if row.add(delta) < 0.0 {
-                        infeasible_rows.push(info_tag_other);
-                    }
-                })
-                .is_some()
+                || self
+                    .rows
+                    .get_mut(&info_tag_other)
+                    .map(|row| {
+                        if row.add(delta) < 0.0 {
+                            infeasible_rows.push(info_tag_other);
+                        }
+                    })
+                    .is_some()
             {
             } else {
                 for (symbol, row) in &mut self.rows {
