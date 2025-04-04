@@ -16,7 +16,7 @@ jobs:
   release-plz:
     name: Release-plz
     runs-on: ubuntu-latest
-    if: ${{ github.repository == 'joshka/kasuari' }}
+    if: ${{ github.repository == 'ratatui/kasuari' }}
     concurrency:
       group: release-plz-${{ github.ref }}
       cancel-in-progress: false
