@@ -1,6 +1,24 @@
 # Changelog
 
-## Kasuari 0.4.0 (unreleased)
+## [0.4.0-alpha.2](https://github.com/joshka/kasuari/compare/v0.4.0-alpha.1...v0.4.0-alpha.2) - 2025-04-04
+
+### Added
+
+- make the crate `no_std` ([#2](https://github.com/joshka/kasuari/pull/2))
+
+### Fixed
+
+- clippy lints
+- doc tests
+
+### Other
+
+- add release-plz automation
+- rename ci workflow
+- tweak cargo.toml, unignore cargo.lock
+- add simple ci workflow
+
+## Kasuari 0.4.0-alpha.1
 
 This release is a fork of the library under a new name, `Kasuari`. The name change is to avoid confusion
 with the original `Cassowary-rs` library, which has been unmaintained since 2018. The name `Kasuari` is
