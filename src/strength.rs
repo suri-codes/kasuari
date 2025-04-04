@@ -42,7 +42,7 @@ impl Strength {
 
     /// Create a new strength with the given value, clipped to the legal range (0.0, REQUIRED)
     #[inline]
-    pub fn new(value: f64) -> Self {
+    pub const fn new(value: f64) -> Self {
         Self(value.clamp(0.0, Self::REQUIRED.value()))
     }
 
@@ -51,7 +51,7 @@ impl Strength {
     /// Each weight is multiplied by the multiplier, clamped to the legal range and then multiplied
     /// by the corresponding strength. The resulting strengths are then summed.
     #[inline]
-    pub fn create(strong: f64, medium: f64, weak: f64, multiplier: f64) -> Self {
+    pub const fn create(strong: f64, medium: f64, weak: f64, multiplier: f64) -> Self {
         let strong = (strong * multiplier).clamp(0.0, 1000.0) * Self::STRONG.value();
         let medium = (medium * multiplier).clamp(0.0, 1000.0) * Self::MEDIUM.value();
         let weak = (weak * multiplier).clamp(0.0, 1000.0) * Self::WEAK.value();
