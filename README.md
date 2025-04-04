@@ -11,14 +11,14 @@
 [docs-badge]: https://img.shields.io/badge/docs.rs-kasuari-blue?logo=rust
 [license-badge]: https://img.shields.io/crates/l/kasuari?logo=apache
 [github-badge]: https://img.shields.io/badge/github-joshka%2Fkasuari-blue?logo=github
-[build-badge]: https://github.com/joshka/kasuari/actions/workflows/rust.yml/badge.svg?logo=github
+[build-badge]: https://github.com/joshka/kasuari/actions/workflows/ci.yml/badge.svg?logo=github
 [codecov-badge]: https://img.shields.io/codecov/c/github/joshka/kasuari?logo=codecov
 
 [github]: https://github.com/joshka/kasuari
 [crate]: https://crates.io/crates/kasuari
 [license]: #license
 [docs]: https://docs.rs/kasuari
-[build]: https://github.com/joshka/kasuari/actions/workflows/rust.yml
+[build]: https://github.com/joshka/kasuari/actions/workflows/ci.yml
 [codecov]: https://codecov.io/gh/joshka/kasuari
 
 A Rust implementation of the Cassowary constraint solving algorithm ([Badros et. al 2001]). It is
