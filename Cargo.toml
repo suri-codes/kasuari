@@ -12,16 +12,23 @@ documentation = "https://docs.rs/kasuari"
 homepage = "https://github.com/joshka/kasuari"
 repository = "https://github.com/joshka/kasuari"
 readme = "README.md"
-license = "MIT / Apache-2.0"
+license = "MIT OR Apache-2.0"
 keywords = ["cassowary", "layout", "tui", "solver"]
-categories = ["algorithms", "command-line-interface", "graphics", "gui", "rendering"]
+categories = [
+    "algorithms",
+    "command-line-interface",
+    "graphics",
+    "gui",
+    "rendering",
+]
+rust-version = "1.78"
 
 [dependencies]
-hashbrown = "0.15.2"
-quickcheck = "1.0.3"
-quickcheck_macros = "1.0.0"
-rstest = "0.23.0"
-thiserror = "2.0.12"
+hashbrown = "0.15"
+quickcheck = "1.0"
+quickcheck_macros = "1.0"
+rstest = "0.25"
+thiserror = "2.0"
 
 [dev-dependencies]
 fastrand = "2.1.1"
