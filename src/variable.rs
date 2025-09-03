@@ -1,5 +1,9 @@
 use core::ops;
+#[cfg(not(feature = "portable-atomic"))]
 use core::sync::atomic::{AtomicUsize, Ordering};
+
+#[cfg(feature = "portable-atomic")]
+use portable_atomic::{AtomicUsize, Ordering};
 
 use crate::{Expression, Term};
 
